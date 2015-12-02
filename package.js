@@ -1,8 +1,8 @@
 Package.describe({
-  name: "gwendall:autoform-i18n",
+  name: "jcbernack:autoform-i18n",
   summary: "Internationalization for Autoform",
-  version: "0.1.9_1",
-  git: "https://github.com/gwendall/meteor-autoform-i18n.git"
+  version: "0.5.0",
+  git: "https://github.com/JcBernack/meteor-autoform-i18n.git"
 });
 
 var packages = [
@@ -12,7 +12,7 @@ var packages = [
   "underscore@1.0.3"
 ];
 
-Package.onUse(function (api, where) {
+Package.onUse(function (api) {
 
   api.use(packages);
   api.imply(packages);
