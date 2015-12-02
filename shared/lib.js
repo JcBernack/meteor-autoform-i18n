@@ -25,44 +25,33 @@ SimpleSchema.prototype.i18n = function (jsonPath, options) {
     var keyOptions = _.extend({}, defaults, { label: humanize(key) }, options);
 
     /**
-     * Returns a function which returns a translation for the given attribute.
+     * Sets the given attribute on an object to a function which returns a translation.
+     * If the attribute is already set or the translation does not contain a definition for it nothing happens.
      * The result is determined in the following order:
      * 1. Translation
      * 2. Default value set via options
      * 3. Untranslated language key
-     * @param {String} attribute
-     * @returns {Function}
      */
-    function translate(attribute) {
+    function translate(obj, attribute) {
+      if (obj[attribute] || !keys[attribute]) return;
       var languageKey = [jsonPath, key, attribute].join(".");
-      return function () {
-        var translated = TAPi18n.__(languageKey);
-        if (translated === key && keyOptions[attribute]) {
+      obj[attribute] = function () {
+        var translation = TAPi18n.__(languageKey);
+        if (translation === key && keyOptions[attribute]) {
           return keyOptions[attribute];
         }
-        return translated;
+        return translation;
       };
     }
 
     // make sure the key has an autoform property
     var s = schema[key];
     if (!s.autoform) s.autoform = {};
-    // translate label
-    if (!s.label && keys.label) {
-      s.label = translate("label");
-    }
-    // translate placeholder
-    if (!s.autoform.placeholder && keys.placeholder) {
-      s.autoform.placeholder = translate("placeholder");
-    }
-    // translate options
-    if (!s.autoform.options && keys.options) {
-      s.autoform.options = translate("options");
-    }
-    // translate firstOption
-    if (!s.autoform.firstOption && keys.options) {
-      s.autoform.firstOption = translate("firstOption");
-    }
+    // add translations
+    translate(s, "label");
+    translate(s.autoform, "placeholder");
+    translate(s.autoform, "options");
+    translate(s.autoform, "firstOption");
   });
   return schema;
 };
