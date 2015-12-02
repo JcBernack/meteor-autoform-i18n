@@ -1,60 +1,60 @@
-var humanize = function(property) {
+function humanize(property) {
   return property
-  .replace(/_/g, " ")
-  .replace(/(\w+)/g, function(match) {
-    return match.charAt(0).toUpperCase() + match.slice(1);
-  });
-};
+    .replace(/_/g, " ")
+    .replace(/(\w+)/g, function (match) {
+      return match.charAt(0).toUpperCase() + match.slice(1);
+    });
+}
 
-var getKeys = function(jsonPath, key) {
+function getKeys(jsonPath, key) {
   return TAPi18n.__([jsonPath, key].join("."), { returnObjectTrees: true }) || {};
 }
 
-SimpleSchema.prototype.i18n = function(jsonPath, defaults) {
+var defaults = {
+  placeholder: "Type something...",
+  firstOption: "Select something..."
+};
 
+SimpleSchema.prototype.i18n = function (jsonPath, options) {
+  // do nothing on the server side
   if (Meteor.isServer) return;
-
-  defaults = defaults || {};
-  defaults.placeholder = defaults.placeholder || "Type something...";
-  defaults.firstOption = defaults.firstOption || "Select something...";
-
+  // extend defaults
+  options = _.extend(defaults, options);
+  // iterate over schema keys
   var schema = this._schema;
-  _.each(schema, function(value, key) {
+  _.each(schema, function (value, key) {
 
     if (!value) return;
     var keys = getKeys(jsonPath, key);
 
-    schema[key].autoform = schema[key].autoform || {};
+    // make sure the key has an autoform property
+    var s = schema[key];
+    if (!s.autoform) s.autoform = {};
 
-    if (schema[key].autoform.placeholder || keys.placeholder) {
-      schema[key].autoform.placeholder = schema[key].autoform.placeholder || function() {
-        return getKeys(jsonPath, key).placeholder || defaults.placeholder;
+    if (!s.autoform.placeholder && keys.placeholder) {
+      s.autoform.placeholder = function () {
+        return getKeys(jsonPath, key).placeholder || options.placeholder;
       };
     }
 
-    if (schema[key].autoform.options || keys.options) {
-      schema[key].autoform.options = schema[key].autoform.options || function() {
-        var options = getKeys(jsonPath, key).options;
-        _.each(options, function(option, key) {
-          if (key.slice(-7) === "_plural") delete options[key];
-        });
-        return options;
-      }
+    if (!s.autoform.options && keys.options) {
+      s.autoform.options = function () {
+        return getKeys(jsonPath, key).options;
+      };
     }
 
-    if (schema[key].autoform.firstOption || keys.options) {
-      schema[key].autoform.firstOption = schema[key].autoform.firstOption || function() {
-        return getKeys(jsonPath, key).placeholder || defaults.firstOption;
-      }
+    if (!s.autoform.firstOption && keys.options) {
+      s.autoform.firstOption = function () {
+        return getKeys(jsonPath, key).placeholder || options.firstOption;
+      };
     }
 
-    if (schema[key].label || keys.label) {
-      schema[key].label = schema[key].label || function() {
+    if (!s.label && keys.label) {
+      s.label = function () {
         return getKeys(jsonPath, key).label || humanize(key);
       };
     }
 
   });
   return schema;
-
-}
+};
